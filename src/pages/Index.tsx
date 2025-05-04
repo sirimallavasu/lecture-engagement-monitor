@@ -9,6 +9,14 @@ import StudentGrid from '@/components/dashboard/StudentGrid';
 import AlertLog from '@/components/dashboard/AlertLog';
 import { Smile, Meh, Frown, Monitor, Users } from 'lucide-react';
 
+type Student = {
+  id: number;
+  name: string;
+  expression: 'happy' | 'neutral' | 'sad';
+  isDistracted: boolean;
+  lastActivity?: string;
+};
+
 const Index = () => {
   // Mock data for demonstration purposes
   const [expressionData] = useState([
@@ -34,7 +42,8 @@ const Index = () => {
     { time: '10:50', happy: 16, neutral: 12, sad: 4, distracted: 5 },
   ]);
 
-  const [students] = useState([
+  // Fix the readonly type issue by creating a new array of Student type
+  const initialStudents: Student[] = [
     { id: 1, name: 'Alex Johnson', expression: 'happy', isDistracted: false },
     { id: 2, name: 'Jamie Smith', expression: 'neutral', isDistracted: true, lastActivity: 'Twitter' },
     { id: 3, name: 'Taylor Brown', expression: 'happy', isDistracted: false },
@@ -43,7 +52,9 @@ const Index = () => {
     { id: 6, name: 'Jordan Lee', expression: 'happy', isDistracted: false },
     { id: 7, name: 'Riley Davis', expression: 'happy', isDistracted: false },
     { id: 8, name: 'Quinn Martinez', expression: 'neutral', isDistracted: true, lastActivity: 'Messenger' },
-  ] as const);
+  ];
+
+  const [students] = useState<Student[]>(initialStudents);
 
   const [alerts] = useState([
     { 

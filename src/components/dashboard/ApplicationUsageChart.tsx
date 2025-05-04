@@ -35,8 +35,12 @@ const ApplicationUsageChart: React.FC<ApplicationUsageChartProps> = ({ data }) =
             <Tooltip />
             <Bar 
               dataKey="count" 
-              fill={(entry) => entry.isLectureRelated ? "#2563EB" : "#EF4444"}
+              fill="#2563EB"
               name="Users"
+              // Use the fillOpacity to differentiate between lecture related and non-lecture related apps
+              fillOpacity={(entry) => entry.isLectureRelated ? 1 : 0.6}
+              stroke={(entry) => entry.isLectureRelated ? "#2563EB" : "#EF4444"}
+              strokeWidth={2}
             />
           </BarChart>
         </ResponsiveContainer>
