@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import StatCard from '@/components/dashboard/StatCard';
 import ExpressionChart from '@/components/dashboard/ExpressionChart';
@@ -7,7 +8,6 @@ import EngagementTimeline from '@/components/dashboard/EngagementTimeline';
 import StudentGrid from '@/components/dashboard/StudentGrid';
 import AlertLog from '@/components/dashboard/AlertLog';
 import { Smile, Meh, Frown, Monitor, Users } from 'lucide-react';
-import { showNotification } from '@/services/notificationService';
 
 type Student = {
   id: number;
@@ -15,15 +15,6 @@ type Student = {
   expression: 'happy' | 'neutral' | 'sad';
   isDistracted: boolean;
   lastActivity?: string;
-};
-
-// Alert type definition
-type Alert = {
-  id: number;
-  timestamp: string;
-  student: string;
-  type: 'distraction' | 'expression';
-  message: string;
 };
 
 const Index = () => {
@@ -63,95 +54,38 @@ const Index = () => {
     { id: 8, name: 'Quinn Martinez', expression: 'neutral', isDistracted: true, lastActivity: 'Messenger' },
   ];
 
-  const [students, setStudents] = useState<Student[]>(initialStudents);
-  const [previousStudentStates, setPreviousStudentStates] = useState<{[key: number]: boolean}>({});
-  
-  // Initial alerts state
-  const initialAlerts: Alert[] = [
+  const [students] = useState<Student[]>(initialStudents);
+
+  const [alerts] = useState([
     { 
       id: 1, 
       timestamp: '10:45 AM', 
       student: 'Jamie Smith', 
-      type: 'distraction', 
+      type: 'distraction' as const, 
       message: 'Switched to Twitter for more than 2 minutes' 
     },
     { 
       id: 2, 
       timestamp: '10:42 AM', 
       student: 'Morgan Williams', 
-      type: 'distraction', 
+      type: 'distraction' as const, 
       message: 'Opened YouTube during lecture' 
     },
     { 
       id: 3, 
       timestamp: '10:38 AM', 
       student: 'Morgan Williams', 
-      type: 'expression', 
+      type: 'expression' as const, 
       message: 'Showing signs of disengagement (sad expression)' 
     },
     { 
       id: 4, 
       timestamp: '10:30 AM', 
       student: 'Quinn Martinez', 
-      type: 'distraction', 
+      type: 'distraction' as const, 
       message: 'Using Messenger during lecture' 
     },
-  ];
-
-  const [alerts, setAlerts] = useState<Alert[]>(initialAlerts);
-  
-  // Function to detect changes in student distraction and show notifications
-  useEffect(() => {
-    const distractedStates: {[key: number]: boolean} = {};
-    
-    students.forEach(student => {
-      // If student wasn't previously distracted but now is
-      if (!previousStudentStates[student.id] && student.isDistracted) {
-        showNotification({
-          title: 'Student Distracted',
-          message: `${student.name} is now distracted${student.lastActivity ? ` using ${student.lastActivity}` : ''}.`,
-          type: 'distraction',
-          studentName: student.name
-        });
-      }
-      
-      distractedStates[student.id] = student.isDistracted;
-    });
-    
-    setPreviousStudentStates(distractedStates);
-  }, [students]);
-
-  // Simulate a new alert coming in after 5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const newAlert: Alert = {
-        id: alerts.length + 1,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        student: 'Alex Johnson',
-        type: 'distraction',
-        message: 'Opened Instagram during lecture'
-      };
-      
-      setAlerts(prev => [newAlert, ...prev]);
-      
-      // Show notification for new alert
-      showNotification({
-        id: newAlert.id,
-        title: 'New Alert',
-        message: `${newAlert.student}: ${newAlert.message}`,
-        type: newAlert.type,
-        studentName: newAlert.student
-      });
-      
-      // Update student state to show Alex as distracted
-      setStudents(prev => prev.map(s => 
-        s.id === 1 ? { ...s, isDistracted: true, lastActivity: 'Instagram' } : s
-      ));
-      
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  ]);
 
   // Calculate engagement score (simple demonstration)
   const totalStudents = students.length;
