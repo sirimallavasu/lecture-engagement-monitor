@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { showNotification } from '@/services/notificationService';
 
 interface Alert {
   id: number;
@@ -17,6 +18,30 @@ interface AlertLogProps {
 }
 
 const AlertLog: React.FC<AlertLogProps> = ({ alerts }) => {
+  const previousAlertCount = useRef(alerts.length);
+  
+  useEffect(() => {
+    // Check if new alerts have been added
+    if (alerts.length > previousAlertCount.current) {
+      // Get the new alerts (those at the beginning of the array)
+      const newAlerts = alerts.slice(0, alerts.length - previousAlertCount.current);
+      
+      // Show notification for each new alert
+      newAlerts.forEach(alert => {
+        showNotification({
+          id: alert.id,
+          title: `Student Alert: ${alert.type === 'distraction' ? 'Distraction' : 'Expression'}`,
+          message: `${alert.student}: ${alert.message}`,
+          type: alert.type,
+          studentName: alert.student
+        });
+      });
+    }
+    
+    // Update the previous count
+    previousAlertCount.current = alerts.length;
+  }, [alerts]);
+
   return (
     <Card className="col-span-2">
       <CardHeader>
