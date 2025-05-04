@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface ApplicationUsageChartProps {
   data: {
@@ -37,11 +37,16 @@ const ApplicationUsageChart: React.FC<ApplicationUsageChartProps> = ({ data }) =
               dataKey="count" 
               fill="#2563EB"
               name="Users"
-              // Use the fillOpacity to differentiate between lecture related and non-lecture related apps
-              fillOpacity={(entry) => entry.isLectureRelated ? 1 : 0.6}
-              stroke={(entry) => entry.isLectureRelated ? "#2563EB" : "#EF4444"}
-              strokeWidth={2}
-            />
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`}
+                  fillOpacity={entry.isLectureRelated ? 1 : 0.6}
+                  stroke={entry.isLectureRelated ? "#2563EB" : "#EF4444"}
+                  strokeWidth={2}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
