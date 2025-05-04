@@ -122,9 +122,9 @@ const Header: React.FC = () => {
           </Button>
           <div className="ml-4 flex items-center space-x-2">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
-              JD
+              DV
             </div>
-            <span className="text-sm font-medium">Dr. Jane Doe</span>
+            <span className="text-sm font-medium">Dr. Vasu</span>
           </div>
         </div>
       </div>
