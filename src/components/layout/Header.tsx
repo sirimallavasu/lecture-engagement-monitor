@@ -2,11 +2,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Example distracted students data
+const distractedStudents = [
+  { id: 1, name: 'Vivek', app: 'Instagram' },
+  { id: 2, name: 'Nithin', app: 'YouTube' },
+  { id: 3, name: 'Laxman', app: 'WhatsApp' },
+];
 
 const Header: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,6 +34,11 @@ const Header: React.FC = () => {
     setSettingsOpen(true);
   };
 
+  const handleLogout = () => {
+    toast('Logging out...');
+    // Add actual logout logic here if needed
+  };
+
   // Function to render settings content based on device type
   const renderSettings = () => {
     if (isMobile) {
@@ -37,7 +49,15 @@ const Header: React.FC = () => {
               <DrawerTitle>Settings</DrawerTitle>
             </DrawerHeader>
             <div className="p-4">
-              <p className="text-sm text-muted-foreground">Configure application settings here.</p>
+              <p className="text-sm text-muted-foreground mb-6">Configure application settings here.</p>
+              <Button 
+                variant="destructive" 
+                className="w-full" 
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </DrawerContent>
         </Drawer>
@@ -51,7 +71,14 @@ const Header: React.FC = () => {
             <DialogTitle>Settings</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-muted-foreground">Configure application settings here.</p>
+            <p className="text-sm text-muted-foreground mb-6">Configure application settings here.</p>
+            <Button 
+              variant="destructive" 
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -65,10 +92,22 @@ const Header: React.FC = () => {
         <Drawer open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>Notifications</DrawerTitle>
+              <DrawerTitle>Distracted Students</DrawerTitle>
             </DrawerHeader>
             <div className="p-4">
-              <p className="text-sm text-muted-foreground">You have no new notifications.</p>
+              {distractedStudents.length > 0 ? (
+                <ul className="space-y-3">
+                  {distractedStudents.map(student => (
+                    <li key={student.id} className="flex items-center p-2 border rounded-md bg-red-50">
+                      <div className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
+                      <span className="font-medium">{student.name}</span>
+                      <span className="ml-1 text-sm text-muted-foreground">(using {student.app})</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No distracted students detected.</p>
+              )}
             </div>
           </DrawerContent>
         </Drawer>
@@ -79,10 +118,22 @@ const Header: React.FC = () => {
       <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Notifications</DialogTitle>
+            <DialogTitle>Distracted Students</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-muted-foreground">You have no new notifications.</p>
+            {distractedStudents.length > 0 ? (
+              <ul className="space-y-3">
+                {distractedStudents.map(student => (
+                  <li key={student.id} className="flex items-center p-2 border rounded-md bg-red-50">
+                    <div className="h-2 w-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
+                    <span className="font-medium">{student.name}</span>
+                    <span className="ml-1 text-sm text-muted-foreground">(using {student.app})</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No distracted students detected.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
