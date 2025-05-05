@@ -26,18 +26,19 @@ const StudentDashboard = () => {
     timeEngaged: '45 minutes',
   });
 
+  // Fixed the type to be a specific union type instead of a general string
   const [notifications] = useState([
     {
       id: 1,
       message: 'You seem distracted. Try to focus on the lecture.',
       timestamp: '10:25 AM',
-      type: 'attention',
+      type: 'attention' as const,
     },
     {
       id: 2,
       message: 'Great focus for the last 10 minutes!',
       timestamp: '10:35 AM',
-      type: 'positive',
+      type: 'positive' as const,
     },
   ]);
 

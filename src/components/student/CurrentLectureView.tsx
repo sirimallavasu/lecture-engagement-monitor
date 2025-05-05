@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePdf, Link as LinkIcon, Play, Download } from 'lucide-react';
+import { FileText, Link as LinkIcon, Play, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
@@ -42,7 +42,7 @@ const CurrentLectureView: React.FC<CurrentLectureViewProps> = ({ lecture, materi
               <li key={material.id} className="border rounded-md p-2 flex justify-between items-center">
                 <div className="flex items-center">
                   {material.type === 'pdf' ? (
-                    <FilePdf className="h-5 w-5 text-red-500 mr-2" />
+                    <FileText className="h-5 w-5 text-red-500 mr-2" />
                   ) : (
                     <LinkIcon className="h-5 w-5 text-blue-500 mr-2" />
                   )}
