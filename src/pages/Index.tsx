@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import StatCard from '@/components/dashboard/StatCard';
@@ -8,6 +7,8 @@ import EngagementTimeline from '@/components/dashboard/EngagementTimeline';
 import StudentGrid from '@/components/dashboard/StudentGrid';
 import AlertLog from '@/components/dashboard/AlertLog';
 import { Smile, Meh, Frown, Monitor, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 type Student = {
   id: number;
@@ -97,38 +98,42 @@ const Index = () => {
       <Header />
       
       <main className="container py-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Current Lecture Status</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard 
-              title="Total Students" 
-              value={totalStudents} 
-              icon={<Users className="h-5 w-5" />} 
-              description="Students in attendance"
-            />
-            <StatCard 
-              title="Engagement Score" 
-              value={`${engagementScore}%`} 
-              description="Based on expressions and focus"
-              className={engagementScore > 80 ? "border-engagement-positive" : 
-                         engagementScore > 60 ? "border-engagement-neutral" : 
-                         "border-engagement-negative"}
-            />
-            <StatCard 
-              title="Positive Expressions" 
-              value={expressionData[0].value}
-              icon={<Smile className="h-5 w-5 text-engagement-positive" />} 
-              description="Happy students"
-              className="border-engagement-positive"
-            />
-            <StatCard 
-              title="Distracted Students" 
-              value={students.filter(s => s.isDistracted).length} 
-              icon={<Monitor className="h-5 w-5 text-engagement-distracted" />}
-              description="Using non-lecture applications"
-              className="border-engagement-distracted"
-            />
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Current Lecture Status</h2>
+          <Link to="/student">
+            <Button variant="outline">Switch to Student View</Button>
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatCard 
+            title="Total Students" 
+            value={totalStudents} 
+            icon={<Users className="h-5 w-5" />} 
+            description="Students in attendance"
+          />
+          <StatCard 
+            title="Engagement Score" 
+            value={`${engagementScore}%`} 
+            description="Based on expressions and focus"
+            className={engagementScore > 80 ? "border-engagement-positive" : 
+                       engagementScore > 60 ? "border-engagement-neutral" : 
+                       "border-engagement-negative"}
+          />
+          <StatCard 
+            title="Positive Expressions" 
+            value={expressionData[0].value}
+            icon={<Smile className="h-5 w-5 text-engagement-positive" />} 
+            description="Happy students"
+            className="border-engagement-positive"
+          />
+          <StatCard 
+            title="Distracted Students" 
+            value={students.filter(s => s.isDistracted).length} 
+            icon={<Monitor className="h-5 w-5 text-engagement-distracted" />}
+            description="Using non-lecture applications"
+            className="border-engagement-distracted"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
