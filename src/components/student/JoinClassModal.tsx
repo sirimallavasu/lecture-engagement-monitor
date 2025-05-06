@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ interface JoinClassModalProps {
 }
 
 const JoinClassModal: React.FC<JoinClassModalProps> = ({ onJoinSuccess }) => {
+  const navigate = useNavigate();
   const [classId, setClassId] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -50,6 +52,9 @@ const JoinClassModal: React.FC<JoinClassModalProps> = ({ onJoinSuccess }) => {
         setOpen(false);
         setClassId('');
         setPassword('');
+        
+        // Redirect to video meeting page
+        navigate('/video-meeting');
       } else {
         toast.error('Invalid class ID or password');
       }
