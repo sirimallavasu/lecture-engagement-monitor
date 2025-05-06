@@ -6,11 +6,12 @@ import CurrentLectureView from '@/components/student/CurrentLectureView';
 import QuestionPanel from '@/components/student/QuestionPanel';
 import FeedbackWidget from '@/components/student/FeedbackWidget';
 import NotificationsPanel from '@/components/student/NotificationsPanel';
+import JoinClassModal from '@/components/student/JoinClassModal';
 
 const StudentDashboard = () => {
   // Mock data for student view
   const [studentName] = useState('Alex Johnson');
-  const [currentLecture] = useState({
+  const [currentLecture, setCurrentLecture] = useState({
     title: 'Introduction to Data Structures',
     instructor: 'Dr. Vasu',
     startTime: '10:00 AM',
@@ -48,6 +49,14 @@ const StudentDashboard = () => {
     { id: 3, title: 'Practice Examples', type: 'pdf' },
   ]);
 
+  // Handler for successful class join
+  const handleJoinClassSuccess = (classDetails: { id: string; name: string }) => {
+    setCurrentLecture({
+      ...currentLecture,
+      title: classDetails.name,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <StudentHeader 
@@ -57,6 +66,11 @@ const StudentDashboard = () => {
       />
       
       <main className="container py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Student Dashboard</h1>
+          <JoinClassModal onJoinSuccess={handleJoinClassSuccess} />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <CurrentLectureView 
