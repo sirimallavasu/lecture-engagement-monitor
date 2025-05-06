@@ -27,7 +27,7 @@ const Login = () => {
       } else if (email === 'teacher@example.com' && password === 'password') {
         toast.success('Login successful!');
         localStorage.setItem('user', JSON.stringify({ role: 'teacher', name: 'Dr. Vasu' }));
-        navigate('/teacher-dashboard');
+        navigate('/video-meeting');
       } else {
         toast.error('Invalid credentials. Try demo accounts: student@example.com or teacher@example.com with password: password');
       }

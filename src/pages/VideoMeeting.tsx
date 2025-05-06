@@ -1,191 +1,175 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Video, VideoOff, Mic, MicOff, Smile, Meh, Frown } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import StudentExpressions from '@/components/meeting/StudentExpressions';
+import ApplicationMonitor from '@/components/meeting/ApplicationMonitor';
+import { Mic, MicOff, Video, VideoOff, Phone } from 'lucide-react';
+
+// Mock student data for expressions
+const mockStudents = [
+  { id: 1, name: 'Alex Johnson', expression: 'happy' as const },
+  { id: 2, name: 'Jamie Smith', expression: 'neutral' as const },
+  { id: 3, name: 'Casey Brown', expression: 'sad' as const },
+  { id: 4, name: 'Taylor Wilson', expression: 'happy' as const },
+  { id: 5, name: 'Jordan Lee', expression: 'neutral' as const },
+  { id: 6, name: 'Morgan Davis', expression: 'neutral' as const },
+];
+
+// Mock application usage data
+const mockApplications = [
+  { id: 1, studentId: 2, studentName: 'Jamie Smith', applicationName: 'Instagram', timestamp: '10:15 AM', isLectureRelated: false },
+  { id: 2, studentId: 3, studentName: 'Casey Brown', applicationName: 'YouTube', timestamp: '10:18 AM', isLectureRelated: false },
+  { id: 3, studentId: 1, studentName: 'Alex Johnson', applicationName: 'Google Docs', timestamp: '10:20 AM', isLectureRelated: true },
+  { id: 4, studentId: 5, studentName: 'Jordan Lee', applicationName: 'WhatsApp', timestamp: '10:25 AM', isLectureRelated: false },
+];
 
 const VideoMeeting = () => {
-  const [cameraOn, setCameraOn] = useState(true);
-  const [micOn, setMicOn] = useState(true);
-  const [currentExpression, setCurrentExpression] = useState<'happy' | 'neutral' | 'sad'>('neutral');
-  const [expressionLog, setExpressionLog] = useState<{
-    timestamp: string;
-    expression: 'happy' | 'neutral' | 'sad';
-  }[]>([]);
-  
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [students, setStudents] = useState(mockStudents);
+  const [applications, setApplications] = useState(mockApplications);
   const videoRef = useRef<HTMLVideoElement>(null);
-  
-  // Mock lecture data
-  const lectureData = {
-    title: "Introduction to Data Structures",
-    instructor: "Dr. Vasu",
-    startTime: "10:00 AM",
-    duration: "90 minutes",
-    participants: 24,
-  };
-  
-  // Simulating random expression changes for demo
+
+  // Simulate getting video feed
   useEffect(() => {
-    const expressionTypes: ('happy' | 'neutral' | 'sad')[] = ['happy', 'neutral', 'sad'];
-    
-    const intervalId = setInterval(() => {
-      const newExpression = expressionTypes[Math.floor(Math.random() * expressionTypes.length)];
-      setCurrentExpression(newExpression);
-      
-      // Log the expression change
-      setExpressionLog(prev => [
-        {
-          timestamp: new Date().toLocaleTimeString(),
-          expression: newExpression
-        },
-        ...prev.slice(0, 9) // Keep only the 10 most recent logs
-      ]);
-    }, 8000); // Change expression roughly every 8 seconds
-    
-    return () => clearInterval(intervalId);
-  }, []);
-  
-  // Mock participants with random expressions
-  const students = [
-    { id: 1, name: "Alex Johnson", expression: 'happy' as const },
-    { id: 2, name: "Priya Sharma", expression: 'neutral' as const },
-    { id: 3, name: "Michael Lee", expression: 'sad' as const },
-    { id: 4, name: "Sophia Chen", expression: 'happy' as const },
-    { id: 5, name: "Emma Wilson", expression: 'neutral' as const },
-    { id: 6, name: "David Brown", expression: 'happy' as const },
-    { id: 7, name: "Sarah Miller", expression: 'neutral' as const },
-    { id: 8, name: "James Taylor", expression: 'sad' as const },
-  ];
-  
-  useEffect(() => {
-    // Access webcam if camera is on
-    if (cameraOn && videoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        })
-        .catch(err => {
-          console.error("Error accessing camera:", err);
-          setCameraOn(false);
+    let stream: MediaStream | null = null;
+
+    const getVideo = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: videoEnabled,
+          audio: micEnabled
         });
-    }
-  }, [cameraOn]);
-  
-  const toggleCamera = () => {
-    if (cameraOn && videoRef.current && videoRef.current.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setCameraOn(!cameraOn);
-  };
-  
-  const getExpressionEmoji = (expression: 'happy' | 'neutral' | 'sad') => {
-    switch (expression) {
-      case 'happy': return <Smile className="h-6 w-6 text-engagement-positive" />;
-      case 'neutral': return <Meh className="h-6 w-6 text-engagement-neutral" />;
-      case 'sad': return <Frown className="h-6 w-6 text-engagement-negative" />;
-    }
-  };
-  
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+      }
+    };
+
+    getVideo();
+
+    // Cleanup function
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [videoEnabled, micEnabled]);
+
+  // Simulate random expression changes for students
+  useEffect(() => {
+    const expressionTypes = ['happy', 'neutral', 'sad'] as const;
+    
+    const interval = setInterval(() => {
+      setStudents(currentStudents => 
+        currentStudents.map(student => {
+          // 30% chance to change expression
+          if (Math.random() > 0.7) {
+            const newExpression = expressionTypes[Math.floor(Math.random() * expressionTypes.length)];
+            return { ...student, expression: newExpression };
+          }
+          return student;
+        })
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulate random application usage
+  useEffect(() => {
+    const appNames = ['Instagram', 'YouTube', 'WhatsApp', 'TikTok', 'Games', 'Google Docs', 'Zoom Notes'];
+    
+    const interval = setInterval(() => {
+      // 20% chance to add new application usage
+      if (Math.random() > 0.8) {
+        const studentIndex = Math.floor(Math.random() * students.length);
+        const student = students[studentIndex];
+        const appIndex = Math.floor(Math.random() * appNames.length);
+        const appName = appNames[appIndex];
+        const isRelated = appIndex >= 5; // Last two are related to lecture
+        
+        const hours = new Date().getHours();
+        const minutes = new Date().getMinutes();
+        const timeString = `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${hours >= 12 ? 'PM' : 'AM'}`;
+        
+        const newApp = {
+          id: Date.now(),
+          studentId: student.id,
+          studentName: student.name,
+          applicationName: appName,
+          timestamp: timeString,
+          isLectureRelated: isRelated
+        };
+        
+        setApplications(apps => [...apps, newApp]);
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [students]);
+
+  const toggleMic = () => setMicEnabled(!micEnabled);
+  const toggleVideo = () => setVideoEnabled(!videoEnabled);
+  const endCall = () => window.location.href = '/';
+
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">{lectureData.title}</h1>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Badge variant="outline">{lectureData.instructor}</Badge>
-            <Badge variant="outline">Started: {lectureData.startTime}</Badge>
-            <Badge variant="outline">Duration: {lectureData.duration}</Badge>
-            <Badge>{lectureData.participants} participants</Badge>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold">Data Structures - Live Class</h1>
+        
+        {/* Video Container */}
+        <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            className={`w-full h-full object-cover ${!videoEnabled ? 'hidden' : ''}`}
+          />
+          
+          {!videoEnabled && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white text-xl">Camera Off</div>
+            </div>
+          )}
+          
+          {/* Controls */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+            <Button 
+              variant={micEnabled ? "default" : "secondary"}
+              size="icon"
+              onClick={toggleMic}
+            >
+              {micEnabled ? <Mic /> : <MicOff />}
+            </Button>
+            
+            <Button 
+              variant={videoEnabled ? "default" : "secondary"}
+              size="icon"
+              onClick={toggleVideo}
+            >
+              {videoEnabled ? <Video /> : <VideoOff />}
+            </Button>
+            
+            <Button 
+              variant="destructive"
+              size="icon"
+              onClick={endCall}
+            >
+              <Phone className="rotate-225" />
+            </Button>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between">
-                  <span>Live Lecture</span>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={toggleCamera}
-                    >
-                      {cameraOn ? <Video /> : <VideoOff />}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => setMicOn(!micOn)}
-                    >
-                      {micOn ? <Mic /> : <MicOff />}
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-black rounded-md overflow-hidden relative">
-                  {cameraOn ? (
-                    <video 
-                      ref={videoRef} 
-                      autoPlay 
-                      muted 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white">
-                      <div className="text-center">
-                        <VideoOff className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                        <p>Camera is off</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Your current expression indicator */}
-                  <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-md backdrop-blur">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-sm">Your expression:</span>
-                      {getExpressionEmoji(currentExpression)}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <StudentExpressions students={students} />
-          </div>
-          
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Expression Log</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {expressionLog.length === 0 ? (
-                    <p className="text-muted-foreground">No expressions recorded yet.</p>
-                  ) : (
-                    expressionLog.map((log, index) => (
-                      <div key={index} className="flex items-center justify-between border-b pb-2">
-                        <div className="flex items-center gap-2">
-                          {getExpressionEmoji(log.expression)}
-                          <span>{log.expression}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{log.timestamp}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Other content like chat could go here */}
-          </div>
+        {/* Analytics and Monitoring Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <StudentExpressions students={students} />
+          <ApplicationMonitor applications={applications} />
         </div>
       </div>
     </div>
