@@ -6,25 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Normalize email (trim and convert to lowercase)
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
     // Mock login - in a real app, this would be an API call
     setTimeout(() => {
-      // Demo credentials for testing
-      if (email === 'student@example.com' && password === 'password') {
+      // Demo credentials with normalized comparison
+      if ((normalizedEmail === 'student@example.com' || normalizedEmail === 'student') && 
+          trimmedPassword === 'password') {
         toast.success('Login successful!');
         localStorage.setItem('user', JSON.stringify({ role: 'student', name: 'Alex Johnson' }));
         navigate('/student');
-      } else if (email === 'teacher@example.com' && password === 'password') {
+      } else if ((normalizedEmail === 'teacher@example.com' || normalizedEmail === 'teacher') && 
+                trimmedPassword === 'password') {
         toast.success('Login successful!');
         localStorage.setItem('user', JSON.stringify({ role: 'teacher', name: 'Dr. Vasu' }));
         navigate('/video-meeting');
@@ -33,6 +41,10 @@ const Login = () => {
       }
       setIsLoading(false);
     }, 1000);
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -50,8 +62,8 @@ const Login = () => {
               <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
-                type="email" 
-                placeholder="name@example.com" 
+                type="text" 
+                placeholder="student@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -64,13 +76,24 @@ const Login = () => {
                   Forgot password?
                 </a>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input 
+                  id="password" 
+                  type={showPassword ? "text" : "password"}
+                  placeholder="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button 
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  onClick={toggleShowPassword}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                </button>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
@@ -84,7 +107,9 @@ const Login = () => {
               </a>
             </div>
             <div className="text-xs text-muted-foreground text-center">
-              Demo accounts: student@example.com or teacher@example.com (password: password)
+              <div className="font-medium mb-1">Demo accounts:</div>
+              <div>Email: student@example.com or teacher@example.com</div>
+              <div>Password: password</div>
             </div>
           </CardFooter>
         </form>
