@@ -4,41 +4,41 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 
-const Login = () => {
+const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('student');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Normalize email (trim and convert to lowercase)
-    const normalizedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
-
-    // Mock login - in a real app, this would be an API call
+    // Mock signup - in a real app, this would be an API call
     setTimeout(() => {
-      // Demo credentials with normalized comparison
-      if ((normalizedEmail === 'student@example.com' || normalizedEmail === 'student') && 
-          trimmedPassword === 'password') {
-        toast.success('Login successful!');
-        localStorage.setItem('user', JSON.stringify({ role: 'student', name: 'Alex Johnson' }));
+      // Store user in localStorage (demo only - not secure for real apps)
+      localStorage.setItem('user', JSON.stringify({ 
+        role, 
+        name,
+        email
+      }));
+      
+      toast.success('Account created successfully!');
+      
+      // Redirect based on role
+      if (role === 'student') {
         navigate('/student');
-      } else if ((normalizedEmail === 'teacher@example.com' || normalizedEmail === 'teacher') && 
-                trimmedPassword === 'password') {
-        toast.success('Login successful!');
-        localStorage.setItem('user', JSON.stringify({ role: 'teacher', name: 'Dr. Vasu' }));
-        navigate('/video-meeting');
       } else {
-        toast.error('Invalid credentials. Try demo accounts: student@example.com or teacher@example.com with password: password');
+        navigate('/video-meeting');
       }
+      
       setIsLoading(false);
     }, 1000);
   };
@@ -51,36 +51,42 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            Create your account to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input 
+                id="name" 
+                type="text" 
+                placeholder="John Doe" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
-                type="text" 
-                placeholder="student@example.com" 
+                type="email" 
+                placeholder="name@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"}
-                  placeholder="password" 
+                  placeholder="Create a password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -95,21 +101,37 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">I am a</Label>
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant={role === 'student' ? 'default' : 'outline'}
+                  className="flex-1"
+                  onClick={() => setRole('student')}
+                >
+                  Student
+                </Button>
+                <Button
+                  type="button"
+                  variant={role === 'teacher' ? 'default' : 'outline'}
+                  className="flex-1" 
+                  onClick={() => setRole('teacher')}
+                >
+                  Teacher
+                </Button>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
             <div className="text-center text-sm">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
               </Link>
-            </div>
-            <div className="text-xs text-muted-foreground text-center">
-              <div className="font-medium mb-1">Demo accounts:</div>
-              <div>Email: student@example.com or teacher@example.com</div>
-              <div>Password: password</div>
             </div>
           </CardFooter>
         </form>
@@ -118,4 +140,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
