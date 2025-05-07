@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Play, Calendar, Users, Clock } from 'lucide-react';
+import { Play, Calendar, Users, Clock, Search } from 'lucide-react';
+import CreateClassModal from '../components/teacher/CreateClassModal';
 
 // Mock lectures data
 const mockLectures = [
@@ -47,6 +48,8 @@ const LectureView = () => {
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<typeof mockLectures[0] | null>(null);
+  const [lectures, setLectures] = useState<Array<any>>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,6 +59,12 @@ const LectureView = () => {
       password: '',
     },
   });
+
+  // Load classes on component mount
+  useEffect(() => {
+    const storedClasses = JSON.parse(localStorage.getItem('teacherClasses') || '[]');
+    setLectures([...mockLectures, ...storedClasses]);
+  }, []);
 
   const startLecture = (lecture: typeof mockLectures[0]) => {
     setSelectedLecture(lecture);
@@ -80,43 +89,74 @@ const LectureView = () => {
     });
   };
 
+  const handleClassCreated = (newClass: any) => {
+    setLectures(prev => [...prev, newClass]);
+  };
+
+  // Filter classes based on search term
+  const filteredLectures = lectures.filter(lecture => 
+    lecture.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lecture.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">Teacher Lectures</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
+          
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                className="pl-9" 
+                placeholder="Search classes..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <CreateClassModal onClassCreated={handleClassCreated} />
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockLectures.map((lecture) => (
-            <Card key={lecture.id} className="overflow-hidden">
-              <CardHeader className="bg-primary/5">
-                <CardTitle>{lecture.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{lecture.date}</span>
+          {filteredLectures.length > 0 ? (
+            filteredLectures.map((lecture) => (
+              <Card key={lecture.id + lecture.createdAt} className="overflow-hidden">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle>{lecture.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <span>{lecture.date}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>{lecture.schedule}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span>{lecture.schedule}</span>
+                  
+                  <div className="flex items-center text-sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>{lecture.students} students enrolled</span>
                   </div>
-                </div>
-                
-                <div className="flex items-center text-sm">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>{lecture.students} students enrolled</span>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={() => startLecture(lecture)}>
-                    <Play className="mr-2" />
-                    Start Class
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={() => startLecture(lecture)}>
+                      <Play className="mr-2" />
+                      Start Class
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-10">
+              <p className="text-muted-foreground">No classes found. Create a new class to get started.</p>
+            </div>
+          )}
         </div>
       </div>
 
