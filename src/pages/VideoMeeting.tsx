@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import StudentExpressions from '@/components/meeting/StudentExpressions';
 import ApplicationMonitor from '@/components/meeting/ApplicationMonitor';
 import { Mic, MicOff, Video, VideoOff, Phone } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 // Mock student data for expressions
 const mockStudents = [
@@ -30,23 +32,37 @@ const VideoMeeting = () => {
   const [students, setStudents] = useState(mockStudents);
   const [applications, setApplications] = useState(mockApplications);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Simulate getting video feed
+  // Fix camera functionality
   useEffect(() => {
     let stream: MediaStream | null = null;
 
     const getVideo = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: videoEnabled,
-          audio: micEnabled
-        });
+        // Stop any existing tracks before requesting new ones
+        if (videoRef.current && videoRef.current.srcObject instanceof MediaStream) {
+          const currentStream = videoRef.current.srcObject as MediaStream;
+          currentStream.getTracks().forEach(track => track.stop());
+        }
         
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (videoEnabled) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: micEnabled
+          });
+          
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+          setCameraError(null);
+        } else if (videoRef.current) {
+          videoRef.current.srcObject = null;
         }
       } catch (err) {
         console.error("Error accessing camera:", err);
+        setCameraError("Failed to access camera. Please check permissions.");
+        toast.error("Camera access failed. Please check your browser permissions.");
       }
     };
 
@@ -122,7 +138,7 @@ const VideoMeeting = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold">Data Structures - Live Class</h1>
         
-        {/* Video Container */}
+        {/* Main Video Container */}
         <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
           <video 
             ref={videoRef} 
@@ -135,6 +151,12 @@ const VideoMeeting = () => {
           {!videoEnabled && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-white text-xl">Camera Off</div>
+            </div>
+          )}
+
+          {cameraError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+              <div className="text-red-500 text-xl text-center p-4">{cameraError}</div>
             </div>
           )}
           
@@ -165,6 +187,35 @@ const VideoMeeting = () => {
             </Button>
           </div>
         </div>
+
+        {/* Student Videos Grid */}
+        <Card className="p-4">
+          <h2 className="text-xl font-semibold mb-4">Students in Meeting</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {students.map(student => (
+              <div key={student.id} className="flex flex-col items-center">
+                <div className="relative mb-2">
+                  <div className="bg-muted rounded-md aspect-video w-full flex items-center justify-center overflow-hidden">
+                    {/* This would be a real video feed in a production environment */}
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/personas/svg?seed=${student.name}`} />
+                      <AvatarFallback>{student.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className={`absolute bottom-1 left-1 h-3 w-3 rounded-full 
+                    ${student.expression === 'happy' ? 'bg-engagement-positive' : 
+                      student.expression === 'neutral' ? 'bg-engagement-neutral' : 'bg-engagement-negative'}`}>
+                  </div>
+                  <div className="absolute bottom-1 right-1 text-xs bg-black/70 text-white px-1 rounded">
+                    {student.expression === 'happy' ? 'Engaged' : 
+                     student.expression === 'neutral' ? 'Neutral' : 'Disengaged'}
+                  </div>
+                </div>
+                <span className="text-xs font-medium truncate w-full text-center">{student.name}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
         
         {/* Analytics and Monitoring Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
