@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import StudentExpressions from '@/components/meeting/StudentExpressions';
 import ApplicationMonitor from '@/components/meeting/ApplicationMonitor';
-import { Mic, MicOff, Video, VideoOff, Phone } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Phone, Maximize, Minimize } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
@@ -29,6 +28,7 @@ const mockApplications = [
 
 const VideoMeeting = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isTeacher = location.state?.isTeacher || false;
   const classTitle = location.state?.classTitle || "Data Structures - Live Class";
   const classId = location.state?.classId || "";
@@ -38,7 +38,18 @@ const VideoMeeting = () => {
   const [students, setStudents] = useState(mockStudents);
   const [applications, setApplications] = useState(mockApplications);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Check user auth
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      toast.error('Please sign in to join a class');
+      navigate('/login', { state: { redirectTo: '/video-meeting' } });
+    }
+  }, [navigate]);
 
   // Fix camera functionality
   useEffect(() => {
@@ -138,6 +149,32 @@ const VideoMeeting = () => {
   const toggleMic = () => setMicEnabled(!micEnabled);
   const toggleVideo = () => setVideoEnabled(!videoEnabled);
   const endCall = () => window.location.href = '/';
+  
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && videoContainerRef.current) {
+      videoContainerRef.current.requestFullscreen().catch((err) => {
+        toast.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  // Update fullscreen state when exiting with Escape key
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -161,7 +198,7 @@ const VideoMeeting = () => {
         )}
         
         {/* Main Video Container */}
-        <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+        <div ref={videoContainerRef} className="relative aspect-video bg-black rounded-lg overflow-hidden">
           <video 
             ref={videoRef} 
             autoPlay 
@@ -198,6 +235,14 @@ const VideoMeeting = () => {
               onClick={toggleVideo}
             >
               {videoEnabled ? <Video /> : <VideoOff />}
+            </Button>
+            
+            <Button 
+              variant="secondary"
+              size="icon"
+              onClick={toggleFullscreen}
+            >
+              {isFullscreen ? <Minimize /> : <Maximize />}
             </Button>
             
             <Button 

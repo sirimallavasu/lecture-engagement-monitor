@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -14,6 +13,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.redirectTo || '/student';
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +31,12 @@ const Login = () => {
           trimmedPassword === 'password') {
         toast.success('Login successful!');
         localStorage.setItem('user', JSON.stringify({ role: 'student', name: 'Alex Johnson' }));
-        navigate('/student');
+        navigate(redirectTo);
       } else if ((normalizedEmail === 'teacher@example.com' || normalizedEmail === 'teacher') && 
                 trimmedPassword === 'password') {
         toast.success('Login successful!');
         localStorage.setItem('user', JSON.stringify({ role: 'teacher', name: 'Dr. Vasu' }));
-        navigate('/video-meeting');
+        navigate(redirectTo === '/student' ? '/teacher' : redirectTo);
       } else {
         toast.error('Invalid credentials. Try demo accounts: student@example.com or teacher@example.com with password: password');
       }

@@ -1,9 +1,22 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleJoinClass = () => {
+    const user = localStorage.getItem('user');
+    if (!user) {
+      toast.info('Please sign in to join a class');
+      navigate('/login', { state: { redirectTo: '/video-meeting' } });
+    } else {
+      navigate('/video-meeting');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-background p-4 text-center">
       <div>
@@ -26,10 +39,8 @@ const Index = () => {
             Student Demo
           </Link>
         </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link to="/video-meeting">
-            Join Class
-          </Link>
+        <Button variant="outline" size="lg" onClick={handleJoinClass}>
+          Join Class
         </Button>
       </div>
     </div>
