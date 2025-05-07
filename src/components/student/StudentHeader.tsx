@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, User, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -123,8 +122,8 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <div className="p-2 font-medium border-b">{studentName}</div>
-              <DropdownMenuItem onClick={() => toast.info('Profile view not implemented yet')}>
-                My Profile
+              <DropdownMenuItem>
+                <Link to="/profile" className="flex w-full">My Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.info('Settings not implemented yet')}>
                 Settings
