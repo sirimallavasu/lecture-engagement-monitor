@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail } from 'lucide-react';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -15,36 +15,86 @@ const Signup = () => {
   const [role, setRole] = useState('student');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock signup - in a real app, this would be an API call
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    // Check if user already exists
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const userExists = registeredUsers.some((user: any) => user.email === normalizedEmail);
+    
+    if (userExists) {
+      toast.error('User with this email already exists. Please log in instead.');
+      setIsLoading(false);
+      return;
+    }
+    
+    // Generate verification token
+    const verificationToken = Math.random().toString(36).substring(2, 15);
+    
+    // Create new user with verification token
+    const newUser = {
+      name,
+      email: normalizedEmail,
+      password,
+      role,
+      emailVerified: false,
+      verificationToken,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Add user to registered users
+    registeredUsers.push(newUser);
+    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    
+    // Simulate email sending
     setTimeout(() => {
-      // Store user in localStorage (demo only - not secure for real apps)
-      localStorage.setItem('user', JSON.stringify({ 
-        role, 
-        name,
-        email
-      }));
+      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(normalizedEmail)}`);
       
-      toast.success('Account created successfully!');
-      
-      // Redirect based on role
-      if (role === 'student') {
-        navigate('/student');
-      } else {
-        navigate('/video-meeting');
-      }
-      
+      setVerificationSent(true);
+      toast.success('Registration successful! Please check your email to verify your account.');
       setIsLoading(false);
     }, 1000);
   };
 
+  const resendVerificationEmail = () => {
+    // Get user
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const user = registeredUsers.find((u: any) => u.email === email.trim().toLowerCase());
+    
+    if (user) {
+      // Generate new verification token
+      const verificationToken = Math.random().toString(36).substring(2, 15);
+      
+      // Update user with new token
+      const updatedUsers = registeredUsers.map((u: any) => {
+        if (u.email === user.email) {
+          return { ...u, verificationToken };
+        }
+        return u;
+      });
+      
+      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      
+      // Simulate sending email
+      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(user.email)}`);
+      
+      toast.success('Verification email resent! Please check your inbox.');
+    }
+  };
+
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+
+  const goToLogin = () => {
+    navigate('/login');
   };
 
   return (
@@ -56,85 +106,116 @@ const Signup = () => {
             Create your account to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                type="text" 
-                placeholder="John Doe" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="name@example.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+        {!verificationSent ? (
+          <form onSubmit={handleSignup}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
                 <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="name" 
+                  type="text" 
+                  placeholder="John Doe" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
-                <button 
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                  onClick={toggleShowPassword}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                </button>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button 
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    onClick={toggleShowPassword}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">I am a</Label>
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant={role === 'student' ? 'default' : 'outline'}
+                    className="flex-1"
+                    onClick={() => setRole('student')}
+                  >
+                    Student
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={role === 'teacher' ? 'default' : 'outline'}
+                    className="flex-1" 
+                    onClick={() => setRole('teacher')}
+                  >
+                    Teacher
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Creating account...' : 'Create account'}
+              </Button>
+              <div className="text-center text-sm">
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:underline">
+                  Sign in
+                </Link>
+              </div>
+            </CardFooter>
+          </form>
+        ) : (
+          <div className="p-6">
+            <div className="flex flex-col items-center justify-center space-y-4 mb-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-medium text-lg">Verification email sent</h3>
+                <p className="text-muted-foreground mt-1">
+                  We've sent a verification link to <span className="font-medium">{email}</span>
+                </p>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">I am a</Label>
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant={role === 'student' ? 'default' : 'outline'}
-                  className="flex-1"
-                  onClick={() => setRole('student')}
-                >
-                  Student
+            <div className="space-y-4">
+              <p className="text-sm text-center">
+                Please check your inbox and click the verification link to complete your registration.
+                If you don't see it, check your spam folder.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button onClick={resendVerificationEmail} variant="outline" className="w-full">
+                  Resend verification email
                 </Button>
-                <Button
-                  type="button"
-                  variant={role === 'teacher' ? 'default' : 'outline'}
-                  className="flex-1" 
-                  onClick={() => setRole('teacher')}
-                >
-                  Teacher
+                <Button onClick={goToLogin} className="w-full">
+                  Go to login
                 </Button>
               </div>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Create account'}
-            </Button>
-            <div className="text-center text-sm">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -1,20 +1,30 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [verificationRequired, setVerificationRequired] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.redirectTo || '/student';
+
+  useEffect(() => {
+    // Check if coming from verification success
+    const params = new URLSearchParams(location.search);
+    if (params.get('verified') === 'true') {
+      toast.success('Email verified successfully! You can now log in.');
+    }
+  }, [location]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,25 +33,60 @@ const Login = () => {
     // Normalize email (trim and convert to lowercase)
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
-
-    // Mock login - in a real app, this would be an API call
+    
+    // Get registered users from localStorage
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const user = registeredUsers.find((u: any) => u.email === normalizedEmail);
+    
     setTimeout(() => {
-      // Demo credentials with normalized comparison
-      if ((normalizedEmail === 'student@example.com' || normalizedEmail === 'student') && 
-          trimmedPassword === 'password') {
-        toast.success('Login successful!');
-        localStorage.setItem('user', JSON.stringify({ role: 'student', name: 'Alex Johnson' }));
-        navigate(redirectTo);
-      } else if ((normalizedEmail === 'teacher@example.com' || normalizedEmail === 'teacher') && 
-                trimmedPassword === 'password') {
-        toast.success('Login successful!');
-        localStorage.setItem('user', JSON.stringify({ role: 'teacher', name: 'Dr. Vasu' }));
-        navigate(redirectTo === '/student' ? '/teacher' : redirectTo);
+      if (user) {
+        if (user.password === trimmedPassword) {
+          if (user.emailVerified) {
+            toast.success('Login successful!');
+            localStorage.setItem('user', JSON.stringify({ 
+              role: user.role, 
+              name: user.name,
+              email: user.email
+            }));
+            navigate(user.role === 'teacher' && redirectTo === '/student' ? '/teacher' : redirectTo);
+          } else {
+            setVerificationRequired(true);
+            toast.error('Please verify your email before logging in.');
+          }
+        } else {
+          toast.error('Invalid password. Please try again.');
+        }
       } else {
-        toast.error('Invalid credentials. Try demo accounts: student@example.com or teacher@example.com with password: password');
+        toast.error('Email not found. Please sign up first.');
       }
       setIsLoading(false);
     }, 1000);
+  };
+
+  const resendVerificationEmail = () => {
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const user = registeredUsers.find((u: any) => u.email === email.trim().toLowerCase());
+    
+    if (user) {
+      // Generate verification token
+      const verificationToken = Math.random().toString(36).substring(2, 15);
+      
+      // Update user with new token
+      const updatedUsers = registeredUsers.map((u: any) => {
+        if (u.email === user.email) {
+          return { ...u, verificationToken };
+        }
+        return u;
+      });
+      
+      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+      
+      // Simulate sending email
+      toast.success('Verification email resent! Please check your inbox.');
+      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(user.email)}`);
+    } else {
+      toast.error('Email not found. Please sign up first.');
+    }
   };
 
   const toggleShowPassword = () => {
@@ -64,7 +109,7 @@ const Login = () => {
               <Input 
                 id="email" 
                 type="text" 
-                placeholder="student@example.com" 
+                placeholder="your-email@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -81,7 +126,7 @@ const Login = () => {
                 <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"}
-                  placeholder="password" 
+                  placeholder="Enter your password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -96,6 +141,20 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            {verificationRequired && (
+              <div className="text-sm text-destructive">
+                <p>Email not verified. Please check your inbox for the verification link or click below to resend.</p>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="mt-2 text-xs w-full"
+                  onClick={resendVerificationEmail}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Resend verification email
+                </Button>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -106,11 +165,6 @@ const Login = () => {
               <Link to="/signup" className="text-primary hover:underline">
                 Sign up
               </Link>
-            </div>
-            <div className="text-xs text-muted-foreground text-center">
-              <div className="font-medium mb-1">Demo accounts:</div>
-              <div>Email: student@example.com or teacher@example.com</div>
-              <div>Password: password</div>
             </div>
           </CardFooter>
         </form>

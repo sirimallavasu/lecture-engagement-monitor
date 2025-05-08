@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import StudentDashboard from "./pages/StudentDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Verify from "./pages/Verify";
 import VideoMeeting from "./pages/VideoMeeting";
 import LectureView from "./pages/LectureView";
 import Profile from "./pages/Profile";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify" element={<Verify />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/video-meeting" element={<VideoMeeting />} />
           <Route path="/teacher" element={<LectureView />} />
