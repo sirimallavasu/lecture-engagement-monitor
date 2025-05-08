@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { UserRound, Pencil, School, Mail, Phone, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { UserRound, Pencil, School, Mail, Phone, Calendar, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   name: string;
@@ -28,6 +27,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Attempt to load user from localStorage (from signup/login)
@@ -112,12 +112,21 @@ const Profile = () => {
     toast.success('Profile updated successfully!');
   };
 
+  const goToTeacherDashboard = () => {
+    navigate('/teacher');
+    toast.info('Accessing Teacher Dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">My Profile</h1>
-          <div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={goToTeacherDashboard}>
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Teacher Dashboard
+            </Button>
             <Button variant="outline" asChild>
               <Link to={profile?.role === 'student' ? '/student' : '/teacher'}>
                 Back to Dashboard
