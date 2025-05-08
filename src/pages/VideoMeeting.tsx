@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { useLocation, useNavigate } from 'react-router-dom';
 import StudentExpressions from '@/components/meeting/StudentExpressions';
 import ApplicationMonitor from '@/components/meeting/ApplicationMonitor';
-import { Mic, MicOff, Video, VideoOff, Phone, Maximize, Minimize } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Phone, Maximize, Minimize, SwitchCamera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
@@ -41,6 +41,8 @@ const VideoMeeting = () => {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   // Check user auth
   useEffect(() => {
@@ -50,6 +52,24 @@ const VideoMeeting = () => {
       navigate('/login', { state: { redirectTo: '/video-meeting' } });
     }
   }, [navigate]);
+
+  // Get available video devices
+  useEffect(() => {
+    const getVideoDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        setAvailableCameras(videoDevices);
+      } catch (err) {
+        console.error("Error getting video devices:", err);
+        toast.error("Failed to detect cameras");
+      }
+    };
+
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      getVideoDevices();
+    }
+  }, []);
 
   // Fix camera functionality
   useEffect(() => {
@@ -64,10 +84,15 @@ const VideoMeeting = () => {
         }
         
         if (videoEnabled) {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+          // Use the current camera device if available
+          const constraints: MediaStreamConstraints = {
+            video: availableCameras.length > 0 ? 
+              { deviceId: { exact: availableCameras[currentCameraIndex]?.deviceId } } : 
+              true,
             audio: micEnabled
-          });
+          };
+          
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
           
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -91,7 +116,7 @@ const VideoMeeting = () => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [videoEnabled, micEnabled]);
+  }, [videoEnabled, micEnabled, currentCameraIndex, availableCameras]);
 
   // Simulate random expression changes for students
   useEffect(() => {
@@ -161,6 +186,16 @@ const VideoMeeting = () => {
         document.exitFullscreen();
         setIsFullscreen(false);
       }
+    }
+  };
+
+  const switchCamera = () => {
+    if (availableCameras.length > 1) {
+      // Cycle to the next camera
+      setCurrentCameraIndex((prevIndex) => (prevIndex + 1) % availableCameras.length);
+      toast.success("Switching camera");
+    } else {
+      toast.error("No additional cameras detected");
     }
   };
 
@@ -236,6 +271,18 @@ const VideoMeeting = () => {
             >
               {videoEnabled ? <Video /> : <VideoOff />}
             </Button>
+            
+            {/* Camera Switch Button - Only for Teacher */}
+            {isTeacher && availableCameras.length > 1 && (
+              <Button
+                variant="default"
+                size="icon"
+                onClick={switchCamera}
+                title="Switch Camera"
+              >
+                <SwitchCamera />
+              </Button>
+            )}
             
             <Button 
               variant="secondary"
