@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { UserRound, Pencil, School, Mail, Phone, Calendar, LayoutDashboard } from 'lucide-react';
+import { UserRound, Pencil, School, Mail, Phone, Calendar, LayoutDashboard, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserProfile {
   name: string;
@@ -28,18 +30,15 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
+  const { user, profile: authProfile, signOut } = useAuth();
 
   useEffect(() => {
-    // Attempt to load user from localStorage (from signup/login)
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      
-      // Create a full profile using stored data + defaults
+    if (user && authProfile) {
+      // Create profile from auth data + defaults
       const fullProfile: UserProfile = {
-        name: parsedUser.name || 'User',
-        email: parsedUser.email || 'user@example.com',
-        role: parsedUser.role || 'student',
+        name: authProfile.name || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        role: authProfile.role || 'student',
         bio: '',
         phone: '',
         dateJoined: new Date().toLocaleDateString(),
@@ -53,25 +52,49 @@ const Profile = () => {
       setProfile(fullProfile);
       setEditedProfile(fullProfile);
     } else {
-      // Fallback demo data if no user in localStorage
-      const demoProfile: UserProfile = {
-        name: 'Alex Johnson',
-        email: 'alex.johnson@example.edu',
-        role: 'student',
-        bio: 'Computer Science major with interest in machine learning and data science.',
-        phone: '(555) 123-4567',
-        dateJoined: '01/15/2025',
-        notificationPreferences: {
-          email: true,
-          push: true,
-          sms: false
-        }
-      };
-      
-      setProfile(demoProfile);
-      setEditedProfile(demoProfile);
+      // Fallback to localStorage or demo data
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        
+        // Create a full profile using stored data + defaults
+        const fullProfile: UserProfile = {
+          name: parsedUser.name || 'User',
+          email: parsedUser.email || 'user@example.com',
+          role: parsedUser.role || 'student',
+          bio: '',
+          phone: '',
+          dateJoined: new Date().toLocaleDateString(),
+          notificationPreferences: {
+            email: true,
+            push: true,
+            sms: false
+          }
+        };
+        
+        setProfile(fullProfile);
+        setEditedProfile(fullProfile);
+      } else {
+        // Fallback demo data if no user in localStorage
+        const demoProfile: UserProfile = {
+          name: 'Alex Johnson',
+          email: 'alex.johnson@example.edu',
+          role: 'student',
+          bio: 'Computer Science major with interest in machine learning and data science.',
+          phone: '(555) 123-4567',
+          dateJoined: '01/15/2025',
+          notificationPreferences: {
+            email: true,
+            push: true,
+            sms: false
+          }
+        };
+        
+        setProfile(demoProfile);
+        setEditedProfile(demoProfile);
+      }
     }
-  }, []);
+  }, [user, authProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!editedProfile) return;
@@ -112,6 +135,17 @@ const Profile = () => {
     toast.success('Profile updated successfully!');
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
+  };
+
   const goToTeacherDashboard = () => {
     navigate('/teacher');
     toast.info('Accessing Teacher Dashboard');
@@ -131,6 +165,10 @@ const Profile = () => {
               <Link to={profile?.role === 'student' ? '/student' : '/teacher'}>
                 Back to Dashboard
               </Link>
+            </Button>
+            <Button variant="destructive" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Log Out
             </Button>
           </div>
         </div>
