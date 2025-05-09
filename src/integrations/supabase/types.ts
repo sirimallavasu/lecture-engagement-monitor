@@ -9,39 +9,21 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      totp_accounts: {
+      king: {
         Row: {
+          content: string | null
           created_at: string
-          id: string
-          issuer: string
-          name: string
-          password: string | null
-          secret: string
-          timer_period: number
-          user_id: string
-          username: string | null
+          id: number
         }
         Insert: {
+          content?: string | null
           created_at?: string
-          id?: string
-          issuer: string
-          name: string
-          password?: string | null
-          secret: string
-          timer_period?: number
-          user_id: string
-          username?: string | null
+          id?: number
         }
         Update: {
+          content?: string | null
           created_at?: string
-          id?: string
-          issuer?: string
-          name?: string
-          password?: string | null
-          secret?: string
-          timer_period?: number
-          user_id?: string
-          username?: string | null
+          id?: number
         }
         Relationships: []
       }
