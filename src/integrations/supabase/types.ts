@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      engagement_metrics: {
+        Row: {
+          application_usage: Json | null
+          expression_data: Json | null
+          focus_score: number | null
+          id: string
+          lecture_id: string
+          student_id: string
+          timestamp: string
+        }
+        Insert: {
+          application_usage?: Json | null
+          expression_data?: Json | null
+          focus_score?: number | null
+          id?: string
+          lecture_id: string
+          student_id: string
+          timestamp?: string
+        }
+        Update: {
+          application_usage?: Json | null
+          expression_data?: Json | null
+          focus_score?: number | null
+          id?: string
+          lecture_id?: string
+          student_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_metrics_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       king: {
         Row: {
           content: string | null
@@ -26,6 +64,92 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      lectures: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_time: string | null
+          id: string
+          instructor_id: string
+          start_time: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          instructor_id: string
+          start_time?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          instructor_id?: string
+          start_time?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_lectures: {
+        Row: {
+          id: string
+          joined_at: string
+          lecture_id: string
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          lecture_id: string
+          student_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          lecture_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_lectures_lecture_id_fkey"
+            columns: ["lecture_id"]
+            isOneToOne: false
+            referencedRelation: "lectures"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

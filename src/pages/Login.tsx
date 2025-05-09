@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [verificationRequired, setVerificationRequired] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.redirectTo || '/student';
@@ -26,66 +26,47 @@ const Login = () => {
     }
   }, [location]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Normalize email (trim and convert to lowercase)
-    const normalizedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
-    
-    // Get registered users from localStorage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const user = registeredUsers.find((u: any) => u.email === normalizedEmail);
-    
-    setTimeout(() => {
-      if (user) {
-        if (user.password === trimmedPassword) {
-          if (user.emailVerified) {
-            toast.success('Login successful!');
-            localStorage.setItem('user', JSON.stringify({ 
-              role: user.role, 
-              name: user.name,
-              email: user.email
-            }));
-            navigate(user.role === 'teacher' && redirectTo === '/student' ? '/teacher' : redirectTo);
-          } else {
-            setVerificationRequired(true);
-            toast.error('Please verify your email before logging in.');
-          }
-        } else {
-          toast.error('Invalid password. Please try again.');
-        }
-      } else {
-        toast.error('Email not found. Please sign up first.');
-      }
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const resendVerificationEmail = () => {
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const user = registeredUsers.find((u: any) => u.email === email.trim().toLowerCase());
-    
-    if (user) {
-      // Generate verification token
-      const verificationToken = Math.random().toString(36).substring(2, 15);
-      
-      // Update user with new token
-      const updatedUsers = registeredUsers.map((u: any) => {
-        if (u.email === user.email) {
-          return { ...u, verificationToken };
-        }
-        return u;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
       });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Check user role to redirect accordingly
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        toast.success('Login successful!');
+        
+        // Redirect based on role
+        if (profileData?.role === 'teacher') {
+          navigate('/teacher');
+        } else {
+          navigate(redirectTo);
+        }
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
       
-      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-      
-      // Simulate sending email
-      toast.success('Verification email resent! Please check your inbox.');
-      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(user.email)}`);
-    } else {
-      toast.error('Email not found. Please sign up first.');
+      if (error.message.includes('Email not confirmed')) {
+        toast.error('Please verify your email before logging in.');
+      } else {
+        toast.error(error.message || 'Failed to sign in. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,7 +89,7 @@ const Login = () => {
               <Label htmlFor="email">Email</Label>
               <Input 
                 id="email" 
-                type="text" 
+                type="email" 
                 placeholder="your-email@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -118,9 +99,9 @@ const Login = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-sm text-primary hover:underline">
+                <Link to="/reset-password" className="text-sm text-primary hover:underline">
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Input 
@@ -141,20 +122,6 @@ const Login = () => {
                 </button>
               </div>
             </div>
-            {verificationRequired && (
-              <div className="text-sm text-destructive">
-                <p>Email not verified. Please check your inbox for the verification link or click below to resend.</p>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="mt-2 text-xs w-full"
-                  onClick={resendVerificationEmail}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Resend verification email
-                </Button>
-              </div>
-            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>

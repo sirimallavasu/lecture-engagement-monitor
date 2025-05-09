@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Check, X, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Verify = () => {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
@@ -13,41 +14,37 @@ const Verify = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    const email = params.get('email');
-
-    if (!token || !email) {
-      setStatus('error');
-      setErrorMessage('Invalid verification link');
-      return;
-    }
-
-    // Verify token
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const userIndex = registeredUsers.findIndex((user: any) => 
-      user.email === decodeURIComponent(email) && user.verificationToken === token
-    );
-
-    if (userIndex === -1) {
-      setStatus('error');
-      setErrorMessage('Invalid or expired verification link');
-      return;
-    }
-
-    // Mark user as verified
-    registeredUsers[userIndex].emailVerified = true;
-    registeredUsers[userIndex].verifiedAt = new Date().toISOString();
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-
-    // Show success
-    setStatus('success');
+    // This page is now handled directly by Supabase
+    // The user is automatically redirected here after clicking the email verification link
+    // We just need to check if the email is verified and show the appropriate message
     
-    // Auto redirect after 3 seconds
-    setTimeout(() => {
-      navigate('/login?verified=true');
-    }, 3000);
-  }, [location, navigate]);
+    const checkEmailVerification = async () => {
+      try {
+        // Get the current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.email_confirmed_at) {
+          // Email is verified
+          setStatus('success');
+          
+          // Auto redirect after 3 seconds
+          setTimeout(() => {
+            navigate('/login?verified=true');
+          }, 3000);
+        } else {
+          // No session or email not verified
+          setStatus('error');
+          setErrorMessage('Email verification failed or expired. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error checking verification status:', error);
+        setStatus('error');
+        setErrorMessage('An error occurred while verifying your email.');
+      }
+    };
+    
+    checkEmailVerification();
+  }, [navigate]);
 
   const goToLogin = () => {
     navigate('/login');

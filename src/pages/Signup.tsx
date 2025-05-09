@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -18,74 +19,36 @@ const Signup = () => {
   const [verificationSent, setVerificationSent] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Normalize email
-    const normalizedEmail = email.trim().toLowerCase();
-    
-    // Check if user already exists
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const userExists = registeredUsers.some((user: any) => user.email === normalizedEmail);
-    
-    if (userExists) {
-      toast.error('User with this email already exists. Please log in instead.');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Generate verification token
-    const verificationToken = Math.random().toString(36).substring(2, 15);
-    
-    // Create new user with verification token
-    const newUser = {
-      name,
-      email: normalizedEmail,
-      password,
-      role,
-      emailVerified: false,
-      verificationToken,
-      createdAt: new Date().toISOString()
-    };
-    
-    // Add user to registered users
-    registeredUsers.push(newUser);
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-    
-    // Simulate email sending
-    setTimeout(() => {
-      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(normalizedEmail)}`);
-      
-      setVerificationSent(true);
-      toast.success('Registration successful! Please check your email to verify your account.');
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const resendVerificationEmail = () => {
-    // Get user
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const user = registeredUsers.find((u: any) => u.email === email.trim().toLowerCase());
-    
-    if (user) {
-      // Generate new verification token
-      const verificationToken = Math.random().toString(36).substring(2, 15);
-      
-      // Update user with new token
-      const updatedUsers = registeredUsers.map((u: any) => {
-        if (u.email === user.email) {
-          return { ...u, verificationToken };
+    try {
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+        options: {
+          data: {
+            name,
+            role
+          },
         }
-        return u;
       });
-      
-      localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-      
-      // Simulate sending email
-      console.log(`Verification link: http://localhost:3000/verify?token=${verificationToken}&email=${encodeURIComponent(user.email)}`);
-      
-      toast.success('Verification email resent! Please check your inbox.');
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        setVerificationSent(true);
+        toast.success('Registration successful! Please check your email to verify your account.');
+      }
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      toast.error(error.message || 'Failed to sign up. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,9 +169,6 @@ const Signup = () => {
                 If you don't see it, check your spam folder.
               </p>
               <div className="flex flex-col gap-2">
-                <Button onClick={resendVerificationEmail} variant="outline" className="w-full">
-                  Resend verification email
-                </Button>
                 <Button onClick={goToLogin} className="w-full">
                   Go to login
                 </Button>
