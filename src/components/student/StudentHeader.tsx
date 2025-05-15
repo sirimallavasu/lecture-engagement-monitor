@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, User, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -128,6 +127,9 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.info('Settings not implemented yet')}>
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast('Switched to teacher view')}>
+                <Link to="/" className="flex w-full">Switch to Teacher View</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

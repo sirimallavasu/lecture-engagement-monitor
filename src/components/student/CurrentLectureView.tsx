@@ -1,14 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Link as LinkIcon, Play, Download, Plus } from 'lucide-react';
+import { FileText, Link as LinkIcon, Play, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CurrentLectureViewProps {
   lecture: {
@@ -23,27 +19,9 @@ interface CurrentLectureViewProps {
     title: string;
     type: string;
   }[];
-  onAddMaterial?: (material: { title: string; type: string }) => void;
 }
 
-const CurrentLectureView: React.FC<CurrentLectureViewProps> = ({ lecture, materials, onAddMaterial }) => {
-  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-  const [newMaterial, setNewMaterial] = useState({ title: '', type: 'pdf' });
-
-  const handleAddMaterial = () => {
-    if (!newMaterial.title.trim()) {
-      toast.error('Please enter a title for the material');
-      return;
-    }
-
-    if (onAddMaterial) {
-      onAddMaterial(newMaterial);
-      toast.success(`Added ${newMaterial.title}`);
-      setNewMaterial({ title: '', type: 'pdf' });
-      setIsAddingMaterial(false);
-    }
-  };
-
+const CurrentLectureView: React.FC<CurrentLectureViewProps> = ({ lecture, materials }) => {
   return (
     <Card>
       <CardHeader>
@@ -58,17 +36,7 @@ const CurrentLectureView: React.FC<CurrentLectureViewProps> = ({ lecture, materi
         <Progress value={lecture.progress} className="h-2" />
         
         <div className="pt-2">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium">Lecture Materials</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddingMaterial(true)}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Material
-            </Button>
-          </div>
+          <h3 className="font-medium">Lecture Materials</h3>
           <ul className="mt-2 space-y-2">
             {materials.map(material => (
               <li key={material.id} className="border rounded-md p-2 flex justify-between items-center">
@@ -106,44 +74,6 @@ const CurrentLectureView: React.FC<CurrentLectureViewProps> = ({ lecture, materi
             ))}
           </ul>
         </div>
-        
-        <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Lecture Material</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="material-title">Title</Label>
-                <Input
-                  id="material-title"
-                  value={newMaterial.title}
-                  onChange={(e) => setNewMaterial({ ...newMaterial, title: e.target.value })}
-                  placeholder="Lecture Slides, Additional Reading, etc."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="material-type">Type</Label>
-                <Select
-                  value={newMaterial.type}
-                  onValueChange={(value) => setNewMaterial({ ...newMaterial, type: value })}
-                >
-                  <SelectTrigger id="material-type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pdf">PDF Document</SelectItem>
-                    <SelectItem value="link">Web Link</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddingMaterial(false)}>Cancel</Button>
-              <Button onClick={handleAddMaterial}>Add Material</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );
