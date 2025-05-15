@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import StudentHeader from '@/components/student/StudentHeader';
 import PersonalEngagementStats from '@/components/student/PersonalEngagementStats';
 import CurrentLectureView from '@/components/student/CurrentLectureView';
@@ -7,6 +7,9 @@ import QuestionPanel from '@/components/student/QuestionPanel';
 import FeedbackWidget from '@/components/student/FeedbackWidget';
 import NotificationsPanel from '@/components/student/NotificationsPanel';
 import JoinClassModal from '@/components/student/JoinClassModal';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 const StudentDashboard = () => {
   // Mock data for student view
@@ -43,11 +46,13 @@ const StudentDashboard = () => {
     },
   ]);
 
-  const [materials] = useState([
+  const [materials, setMaterials] = useState([
     { id: 1, title: 'Lecture Slides', type: 'pdf' },
     { id: 2, title: 'Additional Reading', type: 'link' },
     { id: 3, title: 'Practice Examples', type: 'pdf' },
   ]);
+
+  const { theme, setTheme } = useTheme();
 
   // Handler for successful class join
   const handleJoinClassSuccess = (classDetails: { id: string; name: string }) => {
@@ -55,6 +60,11 @@ const StudentDashboard = () => {
       ...currentLecture,
       title: classDetails.name,
     });
+  };
+
+  // Function to add new lecture material
+  const handleAddMaterial = (material: { title: string; type: string }) => {
+    setMaterials(prev => [...prev, { ...material, id: prev.length + 1 }]);
   };
 
   return (
@@ -68,7 +78,17 @@ const StudentDashboard = () => {
       <main className="container py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          <JoinClassModal onJoinSuccess={handleJoinClassSuccess} />
+          <div className="flex items-center gap-6">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="dark-mode"
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              />
+              <Label htmlFor="dark-mode">Dark Mode</Label>
+            </div>
+            <JoinClassModal onJoinSuccess={handleJoinClassSuccess} />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -76,6 +96,7 @@ const StudentDashboard = () => {
             <CurrentLectureView 
               lecture={currentLecture} 
               materials={materials} 
+              onAddMaterial={handleAddMaterial}
             />
             <PersonalEngagementStats 
               stats={personalEngagement} 

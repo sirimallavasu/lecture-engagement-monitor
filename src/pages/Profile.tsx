@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { UserRound, Pencil, School, Mail, Phone, Calendar, LayoutDashboard, LogOut } from 'lucide-react';
+import { UserRound, Pencil, School, Mail, Phone, Calendar, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/components/theme/ThemeProvider';
+import { Switch } from '@/components/ui/switch';
 
 interface UserProfile {
   name: string;
@@ -31,6 +33,7 @@ const Profile = () => {
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
   const { user, profile: authProfile, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (user && authProfile) {
@@ -146,23 +149,14 @@ const Profile = () => {
     }
   };
 
-  const goToTeacherDashboard = () => {
-    navigate('/teacher');
-    toast.info('Accessing Teacher Dashboard');
-  };
-
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">My Profile</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={goToTeacherDashboard}>
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              Teacher Dashboard
-            </Button>
             <Button variant="outline" asChild>
-              <Link to={profile?.role === 'student' ? '/student' : '/teacher'}>
+              <Link to="/student">
                 Back to Dashboard
               </Link>
             </Button>
@@ -279,6 +273,18 @@ const Profile = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    <div className="space-y-2 border-t pt-4">
+                      <Label className="text-base">Appearance</Label>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="dark-mode-toggle"
+                          checked={theme === 'dark'}
+                          onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        />
+                        <Label htmlFor="dark-mode-toggle">Dark Mode</Label>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -323,6 +329,18 @@ const Profile = () => {
                           <div className={`w-2 h-2 rounded-full mr-2 ${profile.notificationPreferences.sms ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                           <span>SMS: {profile.notificationPreferences.sms ? 'On' : 'Off'}</span>
                         </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t">
+                      <h3 className="font-medium mb-2">Appearance</h3>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="dark-mode-toggle"
+                          checked={theme === 'dark'}
+                          onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        />
+                        <Label htmlFor="dark-mode-toggle">Dark Mode</Label>
                       </div>
                     </div>
                   </>
