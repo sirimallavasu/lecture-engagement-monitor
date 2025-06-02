@@ -30,40 +30,74 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Basic client-side validation
+    if (!email.trim()) {
+      toast.error('Please enter your email address');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      toast.error('Please enter your password');
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      console.log('Attempting login with:', email.trim());
+      
+      // Try Supabase login first
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password.trim(),
       });
 
       if (error) {
+        console.error('Supabase login error:', error);
+        
+        // If it's a network error, try local authentication
+        if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const userData = JSON.parse(storedUser);
+            if (userData.email === email.trim()) {
+              toast.success('Login successful (offline mode)!');
+              navigate('/student');
+              return;
+            }
+          }
+          toast.error('Network issue detected. Please check your connection.');
+          return;
+        }
+        
         throw error;
       }
 
       if (data.user) {
-        // Check user role to redirect accordingly
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
         toast.success('Login successful!');
-        
-        // Redirect based on role
-        if (profileData?.role === 'teacher') {
-          navigate('/teacher');
-        } else {
-          navigate(redirectTo);
-        }
+        navigate('/student');
       }
     } catch (error: any) {
       console.error('Login error:', error);
       
-      if (error.message.includes('Email not confirmed')) {
+      // Handle network errors with fallback
+      if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          if (userData.email === email.trim()) {
+            toast.info('Using offline mode');
+            navigate('/student');
+            return;
+          }
+        }
+        toast.error('Network connection issue. Please try again.');
+      } else if (error.message.includes('Email not confirmed')) {
         toast.error('Please verify your email before logging in.');
+      } else if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please try again.');
       } else {
-        toast.error(error.message || 'Failed to sign in. Please try again.');
+        toast.error('Failed to sign in. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -75,12 +109,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background dark:bg-gray-900 transition-colors px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            Enter your credentials to access your student account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

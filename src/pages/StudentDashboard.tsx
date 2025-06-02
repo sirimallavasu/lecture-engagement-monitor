@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StudentHeader from '@/components/student/StudentHeader';
 import PersonalEngagementStats from '@/components/student/PersonalEngagementStats';
 import CurrentLectureView from '@/components/student/CurrentLectureView';
@@ -7,6 +8,8 @@ import QuestionPanel from '@/components/student/QuestionPanel';
 import FeedbackWidget from '@/components/student/FeedbackWidget';
 import NotificationsPanel from '@/components/student/NotificationsPanel';
 import JoinClassModal from '@/components/student/JoinClassModal';
+import LectureMaterials from '@/components/student/LectureMaterials';
+import SettingsPanel from '@/components/student/SettingsPanel';
 
 const StudentDashboard = () => {
   // Mock data for student view
@@ -27,7 +30,6 @@ const StudentDashboard = () => {
     timeEngaged: '45 minutes',
   });
 
-  // Fixed the type to be a specific union type instead of a general string
   const [notifications] = useState([
     {
       id: 1,
@@ -58,7 +60,7 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-gray-900 transition-colors">
       <StudentHeader 
         studentName={studentName} 
         currentLecture={currentLecture}
@@ -71,23 +73,46 @@ const StudentDashboard = () => {
           <JoinClassModal onJoinSuccess={handleJoinClassSuccess} />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <CurrentLectureView 
-              lecture={currentLecture} 
-              materials={materials} 
-            />
-            <PersonalEngagementStats 
-              stats={personalEngagement} 
-            />
-          </div>
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="materials">Materials</TabsTrigger>
+            <TabsTrigger value="engagement">Engagement</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-6">
-            <FeedbackWidget />
-            <QuestionPanel />
-            <NotificationsPanel notifications={notifications} />
-          </div>
-        </div>
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <CurrentLectureView 
+                  lecture={currentLecture} 
+                  materials={materials} 
+                />
+                <PersonalEngagementStats 
+                  stats={personalEngagement} 
+                />
+              </div>
+              
+              <div className="space-y-6">
+                <FeedbackWidget />
+                <QuestionPanel />
+                <NotificationsPanel notifications={notifications} />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="materials" className="space-y-6">
+            <LectureMaterials />
+          </TabsContent>
+          
+          <TabsContent value="engagement" className="space-y-6">
+            <PersonalEngagementStats stats={personalEngagement} />
+          </TabsContent>
+          
+          <TabsContent value="settings" className="space-y-6">
+            <SettingsPanel />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

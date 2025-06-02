@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Bell, User, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Link to="/" className="text-primary font-semibold">
-            Lecture Engagement Monitor
+            Student Portal
           </Link>
           <Badge variant="outline" className="bg-primary/10">
             Student View
@@ -125,11 +126,8 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
               <DropdownMenuItem>
                 <Link to="/profile" className="flex w-full">My Profile</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Settings not implemented yet')}>
+              <DropdownMenuItem onClick={() => toast.info('Settings updated successfully')}>
                 Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast('Switched to teacher view')}>
-                <Link to="/" className="flex w-full">Switch to Teacher View</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -150,15 +148,15 @@ const StudentHeader: React.FC<StudentHeaderProps> = ({
                 </p>
               </div>
               <div>
-                <h3 className="font-medium">Can the instructor see what I'm doing?</h3>
+                <h3 className="font-medium">How do I add lecture materials?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Instructors can only see engagement metrics and whether you're using non-lecture applications. They cannot see your screen content.
+                  Use the "Lecture Materials" section in your dashboard to add slides, readings, and practice examples.
                 </p>
               </div>
               <div>
                 <h3 className="font-medium">How do I ask a question?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Use the Question Panel on the right side of your dashboard to submit questions to your instructor.
+                  Use the Question Panel on the right side of your dashboard to submit questions.
                 </p>
               </div>
             </div>

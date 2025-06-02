@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { UserRound, Pencil, School, Mail, Phone, Calendar, LayoutDashboard, LogOut } from 'lucide-react';
+import { UserRound, Pencil, School, Mail, Phone, Calendar, ArrowLeft, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,7 +38,7 @@ const Profile = () => {
       const fullProfile: UserProfile = {
         name: authProfile.name || user.email?.split('@')[0] || 'User',
         email: user.email || '',
-        role: authProfile.role || 'student',
+        role: 'student', // Always student role
         bio: '',
         phone: '',
         dateJoined: new Date().toLocaleDateString(),
@@ -61,7 +61,7 @@ const Profile = () => {
         const fullProfile: UserProfile = {
           name: parsedUser.name || 'User',
           email: parsedUser.email || 'user@example.com',
-          role: parsedUser.role || 'student',
+          role: 'student', // Always student role
           bio: '',
           phone: '',
           dateJoined: new Date().toLocaleDateString(),
@@ -146,31 +146,22 @@ const Profile = () => {
     }
   };
 
-  const goToTeacherDashboard = () => {
-    navigate('/teacher');
-    toast.info('Accessing Teacher Dashboard');
-  };
-
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background dark:bg-gray-900 transition-colors p-4">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Profile</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={goToTeacherDashboard}>
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              Teacher Dashboard
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to={profile?.role === 'student' ? '/student' : '/teacher'}>
-                Back to Dashboard
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+              <Link to="/student">
+                <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="destructive" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Log Out
-            </Button>
+            <h1 className="text-2xl font-bold">My Profile</h1>
           </div>
+          <Button variant="destructive" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Log Out
+          </Button>
         </div>
         
         {profile && (
