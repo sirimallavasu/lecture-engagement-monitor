@@ -21,11 +21,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
-  className: z.string().min(3, { message: "Class name is required (min 3 characters)" }),
-  classId: z.string().min(2, { message: "Class ID is required (min 2 characters)" }),
+  title: z.string().min(3, { message: "Class name is required (min 3 characters)" }),
+  class_id: z.string().min(2, { message: "Class ID is required (min 2 characters)" }),
   password: z.string().min(4, { message: "Password must be at least 4 characters" }),
   description: z.string().optional(),
 });
@@ -36,40 +39,52 @@ type CreateClassModalProps = {
 
 const CreateClassModal = ({ onClassCreated }: CreateClassModalProps) => {
   const [open, setOpen] = React.useState(false);
+  const { user } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      className: '',
-      classId: '',
+      title: '',
+      class_id: '',
       password: '',
       description: '',
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // In a real app, this would call an API to create a class
-    const newClass = {
-      ...values,
-      id: values.classId,
-      title: values.className,
-      schedule: 'Custom Schedule',
-      students: 0,
-      date: 'Upcoming',
-      createdAt: new Date().toISOString(),
-    };
-    
-    // Store in localStorage for persistence across page reloads
-    const teacherClasses = JSON.parse(localStorage.getItem('teacherClasses') || '[]');
-    teacherClasses.push(newClass);
-    localStorage.setItem('teacherClasses', JSON.stringify(teacherClasses));
-    
-    // Call the callback to update UI
-    onClassCreated(newClass);
-    
-    toast.success('Class created successfully!');
-    setOpen(false);
-    form.reset();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast.error('You must be logged in to create a class');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .insert([{
+          title: values.title,
+          class_id: values.class_id,
+          description: values.description || null,
+          password: values.password,
+          teacher_id: user.id
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast.error('Class ID already exists. Please choose a different one.');
+          return;
+        }
+        throw error;
+      }
+
+      onClassCreated(data);
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error creating class:', error);
+      toast.error('Failed to create class. Please try again.');
+    }
   };
 
   return (
@@ -89,7 +104,7 @@ const CreateClassModal = ({ onClassCreated }: CreateClassModalProps) => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="className"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Class Name</FormLabel>
@@ -103,7 +118,7 @@ const CreateClassModal = ({ onClassCreated }: CreateClassModalProps) => {
             
             <FormField
               control={form.control}
-              name="classId"
+              name="class_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Class ID</FormLabel>
@@ -122,7 +137,11 @@ const CreateClassModal = ({ onClassCreated }: CreateClassModalProps) => {
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="A brief introduction to computer science concepts" {...field} />
+                    <Textarea 
+                      placeholder="A brief introduction to computer science concepts" 
+                      {...field} 
+                      rows={3}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,7 +163,9 @@ const CreateClassModal = ({ onClassCreated }: CreateClassModalProps) => {
             />
             
             <div className="flex justify-end pt-2">
-              <Button type="submit">Create Class</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Creating...' : 'Create Class'}
+              </Button>
             </div>
           </form>
         </Form>

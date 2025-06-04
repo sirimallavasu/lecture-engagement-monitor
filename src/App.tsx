@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import StudentDashboard from "./pages/StudentDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Verify from "./pages/Verify";
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify" element={<Verify />} />
               <Route path="/student" element={<StudentDashboard />} />
+              <Route path="/teacher" element={<TeacherDashboard />} />
               <Route path="/video-meeting" element={<VideoMeeting />} />
               <Route path="/profile" element={<Profile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
