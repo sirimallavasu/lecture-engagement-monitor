@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail } from 'lucide-react';
@@ -13,6 +13,7 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
@@ -42,14 +43,14 @@ const Signup = () => {
     }
 
     try {
-      console.log('Attempting signup with:', { email: email.trim(), name, role: 'student' });
+      console.log('Attempting signup with:', { email: email.trim(), name, role });
       
       // For development, we'll create a local account if Supabase fails
       const fallbackSignup = () => {
         const userData = {
           name: name.trim(),
           email: email.trim(),
-          role: 'student',
+          role: role,
           id: Date.now().toString()
         };
         
@@ -65,7 +66,7 @@ const Signup = () => {
         options: {
           data: {
             name: name.trim(),
-            role: 'student'
+            role: role
           },
         }
       });
@@ -96,7 +97,7 @@ const Signup = () => {
         const userData = {
           name: name.trim(),
           email: email.trim(),
-          role: 'student',
+          role: role,
           id: Date.now().toString()
         };
         
@@ -125,7 +126,7 @@ const Signup = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign up</CardTitle>
           <CardDescription className="text-center">
-            Create your student account to get started
+            Create your account to get started
           </CardDescription>
         </CardHeader>
         {!verificationSent ? (
@@ -154,6 +155,18 @@ const Signup = () => {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="role">Account Type</Label>
+                <Select value={role} onValueChange={(value: 'student' | 'teacher') => setRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Student</SelectItem>
+                    <SelectItem value="teacher">Teacher</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input 
@@ -179,7 +192,7 @@ const Signup = () => {
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating account...' : 'Create Student Account'}
+                {isLoading ? 'Creating account...' : `Create ${role === 'teacher' ? 'Teacher' : 'Student'} Account`}
               </Button>
               <div className="text-center text-sm">
                 Already have an account?{" "}
