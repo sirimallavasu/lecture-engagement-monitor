@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, BookOpen, BarChart } from 'lucide-react';
+import { Plus, Users, BookOpen, BarChart, Bell, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -11,6 +11,8 @@ import CreateClassModal from '@/components/teacher/CreateClassModal';
 import ClassList from '@/components/teacher/ClassList';
 import LectureMaterialsManager from '@/components/teacher/LectureMaterialsManager';
 import EngagementReports from '@/components/teacher/EngagementReports';
+import TeacherSettings from '@/components/teacher/TeacherSettings';
+import NotificationCenter from '@/components/teacher/NotificationCenter';
 
 const TeacherDashboard = () => {
   const { user, profile } = useAuth();
@@ -108,11 +110,18 @@ const TeacherDashboard = () => {
         </div>
 
         <Tabs defaultValue="classes" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="reports">Engagement Reports</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="classes" className="space-y-6">
@@ -153,16 +162,12 @@ const TeacherDashboard = () => {
             )}
           </TabsContent>
           
+          <TabsContent value="notifications" className="space-y-6">
+            <NotificationCenter />
+          </TabsContent>
+          
           <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Teacher Settings</CardTitle>
-                <CardDescription>Manage your account and preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Settings panel coming soon...</p>
-              </CardContent>
-            </Card>
+            <TeacherSettings />
           </TabsContent>
         </Tabs>
       </div>
