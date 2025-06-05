@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,21 +70,29 @@ const NotificationCenter = () => {
 
     // Simulate new notifications coming in
     const interval = setInterval(() => {
-      const randomNotifications = [
-        {
-          id: Date.now().toString(),
-          type: Math.random() > 0.5 ? 'distraction' : 'app_usage',
-          studentName: ['Alex Brown', 'Emma Davis', 'Tom Wilson'][Math.floor(Math.random() * 3)],
-          className: 'Introduction to Computer Science',
-          message: Math.random() > 0.5 ? 'Student engagement dropped to 40%' : 'Using YouTube during class',
-          timestamp: new Date(),
-          isRead: false,
-          severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high',
-          details: {}
-        }
+      const notificationTypes: ('distraction' | 'app_usage')[] = ['distraction', 'app_usage'];
+      const severityLevels: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+      const studentNames = ['Alex Brown', 'Emma Davis', 'Tom Wilson'];
+      const messages = [
+        'Student engagement dropped to 40%',
+        'Using YouTube during class',
+        'Low attention detected',
+        'Using social media apps'
       ];
 
-      setNotifications(prev => [...randomNotifications, ...prev].slice(0, 20));
+      const randomNotification: Notification = {
+        id: Date.now().toString(),
+        type: notificationTypes[Math.floor(Math.random() * notificationTypes.length)],
+        studentName: studentNames[Math.floor(Math.random() * studentNames.length)],
+        className: 'Introduction to Computer Science',
+        message: messages[Math.floor(Math.random() * messages.length)],
+        timestamp: new Date(),
+        isRead: false,
+        severity: severityLevels[Math.floor(Math.random() * severityLevels.length)],
+        details: {}
+      };
+
+      setNotifications(prev => [randomNotification, ...prev].slice(0, 20));
     }, 30000); // New notification every 30 seconds
 
     return () => clearInterval(interval);
